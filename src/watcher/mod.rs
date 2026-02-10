@@ -1,5 +1,5 @@
 use anyhow::Result;
-use notify::{Watcher, RecursiveMode, Event, EventKind, Config};
+use notify::{Watcher, RecursiveMode, Event, EventKind};
 use std::path::Path;
 use std::sync::mpsc;
 use std::time::Duration;

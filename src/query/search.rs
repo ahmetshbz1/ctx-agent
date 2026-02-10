@@ -13,7 +13,7 @@ pub fn execute_search(db: &Database, query: &str) -> Result<()> {
 
     println!("  {} results for \"{}\":\n", results.len().to_string().cyan(), query.yellow());
 
-    for (name, path, kind, signature) in &results {
+    for (_name, path, kind, signature) in &results {
         let icon = match kind.as_str() {
             "function" => "ƒ".cyan(),
             "method" => "ƒ".blue(),

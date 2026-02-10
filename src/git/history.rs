@@ -57,7 +57,7 @@ pub fn analyze_git_history(db: &Database, project_root: &Path) -> Result<GitAnal
 
         let author = commit.author().name().unwrap_or("unknown").to_string();
         let time = commit.time();
-        let timestamp = chrono::NaiveDateTime::from_timestamp_opt(time.seconds(), 0)
+        let timestamp = chrono::DateTime::from_timestamp(time.seconds(), 0)
             .map(|t| t.format("%Y-%m-%d %H:%M:%S").to_string());
 
         let message = commit.message().unwrap_or("").to_string();

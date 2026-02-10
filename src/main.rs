@@ -381,7 +381,7 @@ fn cmd_decisions(root: &PathBuf) -> Result<()> {
         let hash_str = if !hash.is_empty() { format!(" ({})", hash).dimmed().to_string() } else { String::new() };
 
         println!("  {} [{}] {}{}",
-            decision.timestamp.format("%Y-%m-%d").to_string().dimmed(),
+            decision.timestamp.get(..10).unwrap_or(&decision.timestamp).dimmed(),
             source_badge,
             decision.description.lines().next().unwrap_or(""),
             hash_str,

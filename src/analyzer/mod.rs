@@ -6,8 +6,6 @@ use anyhow::{Context, Result};
 use std::path::Path;
 
 use crate::db::Database;
-use crate::db::models::SymbolKind;
-use scanner::ScannedFile;
 use parser::{parse_file, ExtractedSymbol};
 
 /// Run a full analysis of the project
@@ -24,7 +22,7 @@ pub fn analyze_project(db: &Database, root: &Path) -> Result<AnalysisResult> {
         all_paths.push(file.relative_path.clone());
 
         // Upsert file into DB
-        let file_id = db.upsert_file(
+        let _file_id = db.upsert_file(
             &file.relative_path,
             &file.language,
             file.size_bytes as i64,

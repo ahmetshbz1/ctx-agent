@@ -48,7 +48,7 @@ pub fn parse_file(source: &str, language: &str) -> Result<ParseResult> {
     };
 
     let mut parser = Parser::new();
-    parser.set_language(ts_lang)?;
+    parser.set_language(&ts_lang)?;
 
     let tree = match parser.parse(source, None) {
         Some(t) => t,

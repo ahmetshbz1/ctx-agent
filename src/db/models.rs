@@ -1,4 +1,3 @@
-use chrono::NaiveDateTime;
 use serde::{Deserialize, Serialize};
 
 /// A tracked file in the project
@@ -10,7 +9,7 @@ pub struct TrackedFile {
     pub size_bytes: i64,
     pub hash: String,
     pub line_count: i64,
-    pub last_analyzed: NaiveDateTime,
+    pub last_analyzed: String,
 }
 
 /// Kind of symbol extracted from source code
@@ -91,7 +90,7 @@ pub struct Dependency {
     pub from_file_id: i64,
     pub to_path: String,
     pub to_file_id: Option<i64>,
-    pub kind: String, // "import", "require", "use"
+    pub kind: String,
     pub imported_names: String,
 }
 
@@ -99,11 +98,11 @@ pub struct Dependency {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Decision {
     pub id: i64,
-    pub timestamp: NaiveDateTime,
+    pub timestamp: String,
     pub description: String,
-    pub source: String, // "commit", "manual"
+    pub source: String,
     pub commit_hash: Option<String>,
-    pub related_files: String, // JSON array of paths
+    pub related_files: String,
 }
 
 /// A knowledge note
@@ -111,9 +110,9 @@ pub struct Decision {
 pub struct Knowledge {
     pub id: i64,
     pub content: String,
-    pub source: String, // "agent", "manual"
+    pub source: String,
     pub related_file: Option<String>,
-    pub timestamp: NaiveDateTime,
+    pub timestamp: String,
 }
 
 /// Git file stats
@@ -121,8 +120,8 @@ pub struct Knowledge {
 pub struct FileStats {
     pub file_id: i64,
     pub commit_count: i64,
-    pub last_modified: Option<NaiveDateTime>,
-    pub churn_score: f64,   // normalized change frequency
+    pub last_modified: Option<String>,
+    pub churn_score: f64,
     pub contributors: i64,
 }
 
