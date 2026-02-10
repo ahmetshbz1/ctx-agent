@@ -9,8 +9,8 @@ license = "MIT"
 # CLI
 clap = { version = "4", features = ["derive"] }
 
-# Database
-rusqlite = { version = "0.31", features = ["bundled", "fts5"] }
+# Database (bundled includes FTS5 support)
+rusqlite = { version = "0.31", features = ["bundled"] }
 
 # Tree-sitter
 tree-sitter = "0.22"

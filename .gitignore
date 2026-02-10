@@ -1,0 +1,21 @@
+# Build artifacts
+/target/
+debug/
+release/
+
+# ctx database
+.ctx/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Cargo lock is committed for binaries
+# Cargo.lock
