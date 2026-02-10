@@ -1,0 +1,40 @@
+[package]
+name = "ctx"
+version = "0.1.0"
+edition = "2021"
+description = "Universal AI Agent Context Protocol — live codebase intelligence for AI agents"
+license = "MIT"
+
+[dependencies]
+# CLI
+clap = { version = "4", features = ["derive"] }
+
+# Database
+rusqlite = { version = "0.31", features = ["bundled", "fts5"] }
+
+# Tree-sitter
+tree-sitter = "0.22"
+tree-sitter-typescript = "0.21"
+tree-sitter-javascript = "0.21"
+tree-sitter-python = "0.21"
+tree-sitter-rust = "0.21"
+
+# Git
+git2 = "0.18"
+
+# File system
+ignore = "0.4"
+notify = "6"
+
+# Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# Output
+colored = "2"
+
+# Error handling
+anyhow = "1"
+
+# Time
+chrono = { version = "0.4", features = ["serde"] }
