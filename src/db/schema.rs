@@ -75,7 +75,6 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             path,
             kind,
             signature,
-            content='',
             tokenize='porter unicode61'
         );
     ")?;
