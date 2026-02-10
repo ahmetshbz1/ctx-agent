@@ -21,8 +21,12 @@ pub fn analyze_project(db: &Database, root: &Path) -> Result<AnalysisResult> {
     for file in &files {
         all_paths.push(file.relative_path.clone());
 
-        // Upsert file into DB
-        let _file_id = db.upsert_file(
+        // Check if file needs re-analysis BEFORE upserting (hash changed)
+        let existing = db.get_file_by_path(&file.relative_path)?;
+        let needs_reanalyze = existing.map(|f| f.hash != file.hash).unwrap_or(true);
+
+        // Upsert file into DB (updates hash, size, line_count)
+        db.upsert_file(
             &file.relative_path,
             &file.language,
             file.size_bytes as i64,
@@ -30,16 +34,12 @@ pub fn analyze_project(db: &Database, root: &Path) -> Result<AnalysisResult> {
             file.line_count as i64,
         )?;
 
-        // Check if file needs re-analysis (hash changed)
-        let existing = db.get_file_by_path(&file.relative_path)?;
-        let needs_reanalyze = existing.map(|f| f.hash != file.hash).unwrap_or(true);
-
         if !needs_reanalyze {
             skipped_files += 1;
             continue;
         }
 
-        // Get the actual file_id (might be different from upsert return on conflict)
+        // Get the file_id
         let file_id = db.get_file_id(&file.relative_path)?
             .context("File should exist after upsert")?;
 
