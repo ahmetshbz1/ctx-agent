@@ -1,6 +1,6 @@
+use crate::db::Database;
 use anyhow::Result;
 use colored::*;
-use crate::db::Database;
 
 /// Execute a search query and display results
 pub fn execute_search(db: &Database, query: &str) -> Result<()> {
@@ -11,7 +11,11 @@ pub fn execute_search(db: &Database, query: &str) -> Result<()> {
         return Ok(());
     }
 
-    println!("  {} results for \"{}\":\n", results.len().to_string().cyan(), query.yellow());
+    println!(
+        "  {} results for \"{}\":\n",
+        results.len().to_string().cyan(),
+        query.yellow()
+    );
 
     for (_name, path, kind, signature) in &results {
         let icon = match kind.as_str() {

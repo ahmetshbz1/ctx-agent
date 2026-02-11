@@ -1,6 +1,6 @@
-pub mod scanner;
-pub mod parser;
 pub mod graph;
+pub mod parser;
+pub mod scanner;
 
 use anyhow::{Context, Result};
 use std::path::Path;
@@ -40,7 +40,8 @@ pub fn analyze_project(db: &Database, root: &Path) -> Result<AnalysisResult> {
         }
 
         // Get the file_id
-        let file_id = db.get_file_id(&file.relative_path)?
+        let file_id = db
+            .get_file_id(&file.relative_path)?
             .context("File should exist after upsert")?;
 
         // Clear old data for re-analysis
@@ -98,7 +99,12 @@ pub fn analyze_project(db: &Database, root: &Path) -> Result<AnalysisResult> {
 }
 
 /// Recursively store a symbol and its children
-fn store_symbol(db: &Database, file_id: i64, sym: &ExtractedSymbol, parent_id: Option<i64>) -> Result<()> {
+fn store_symbol(
+    db: &Database,
+    file_id: i64,
+    sym: &ExtractedSymbol,
+    parent_id: Option<i64>,
+) -> Result<()> {
     let sym_id = db.insert_symbol(
         file_id,
         &sym.name,

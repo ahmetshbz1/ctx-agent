@@ -1,3 +1,5 @@
+#![allow(clippy::module_inception)]
+
 #[cfg(test)]
 mod tests {
     use crate::analyzer::parser::parse_file;
@@ -59,7 +61,9 @@ impl Foo {
 "#;
         let result = parse_file(source, "rust").unwrap();
         // struct + 2 methods
-        let methods: Vec<_> = result.symbols.iter()
+        let methods: Vec<_> = result
+            .symbols
+            .iter()
             .filter(|s| matches!(s.kind, SymbolKind::Method))
             .collect();
         assert_eq!(methods.len(), 2);
@@ -133,7 +137,11 @@ class UserService {
 }
 "#;
         let result = parse_file(source, "javascript").unwrap();
-        let class = result.symbols.iter().find(|s| s.name == "UserService").unwrap();
+        let class = result
+            .symbols
+            .iter()
+            .find(|s| s.name == "UserService")
+            .unwrap();
         assert!(matches!(class.kind, SymbolKind::Class));
         assert!(class.children.len() >= 2); // constructor + getUser + deleteUser
     }
@@ -223,7 +231,11 @@ class UserService:
         return None
 "#;
         let result = parse_file(source, "python").unwrap();
-        let class = result.symbols.iter().find(|s| s.name == "UserService").unwrap();
+        let class = result
+            .symbols
+            .iter()
+            .find(|s| s.name == "UserService")
+            .unwrap();
         assert!(matches!(class.kind, SymbolKind::Class));
         assert_eq!(class.children.len(), 2); // __init__ + get_user
     }
@@ -271,7 +283,7 @@ def add(a: int, b: int) -> int:
     #[test]
     fn test_parse_unsupported_language() {
         let source = "def main\n  puts 'hello'\nend";
-        let result = parse_file(source, "ruby").unwrap();
+        let result = parse_file(source, "elixir").unwrap();
         assert!(result.symbols.is_empty());
         assert!(result.imports.is_empty());
     }
@@ -302,7 +314,11 @@ fn second() {}
         assert!(result.symbols.len() >= 2);
         // Line numbers should be 1-indexed (not 0-indexed)
         for sym in &result.symbols {
-            assert!(sym.start_line >= 1, "start_line should be >= 1, got {}", sym.start_line);
+            assert!(
+                sym.start_line >= 1,
+                "start_line should be >= 1, got {}",
+                sym.start_line
+            );
         }
     }
 
@@ -321,11 +337,11 @@ func greet(name string) string {
 }
 "#;
         let result = parse_file(source, "go").unwrap();
-        
+
         let func_sym = result.symbols.iter().find(|s| s.name == "greet").unwrap();
         assert!(matches!(func_sym.kind, SymbolKind::Function));
         assert!(func_sym.signature.contains("func greet"));
-        
+
         let pkg_sym = result.symbols.iter().find(|s| s.name == "main").unwrap();
         assert!(matches!(pkg_sym.kind, SymbolKind::Module));
 
@@ -348,11 +364,11 @@ func (u *User) GetName() string {
 }
 "#;
         let result = parse_file(source, "go").unwrap();
-        
+
         let struct_sym = result.symbols.iter().find(|s| s.name == "User").unwrap();
         assert!(matches!(struct_sym.kind, SymbolKind::Struct));
         // Fields are extracted as children
-        assert!(struct_sym.children.len() >= 2); 
+        assert!(struct_sym.children.len() >= 2);
 
         let method_sym = result.symbols.iter().find(|s| s.name == "GetName").unwrap();
         assert!(matches!(method_sym.kind, SymbolKind::Method));
@@ -370,7 +386,7 @@ type Reader interface {
 }
 "#;
         let result = parse_file(source, "go").unwrap();
-        
+
         let iface_sym = result.symbols.iter().find(|s| s.name == "Reader").unwrap();
         assert!(matches!(iface_sym.kind, SymbolKind::Interface));
         assert_eq!(iface_sym.children.len(), 2); // Read, Close
@@ -385,10 +401,10 @@ const Version = "1.0.0"
 var Debug = false
 "#;
         let result = parse_file(source, "go").unwrap();
-        
+
         let const_sym = result.symbols.iter().find(|s| s.name == "Version").unwrap();
         assert!(matches!(const_sym.kind, SymbolKind::Constant));
-        
+
         let var_sym = result.symbols.iter().find(|s| s.name == "Debug").unwrap();
         assert!(matches!(var_sym.kind, SymbolKind::Constant));
     }
@@ -407,14 +423,18 @@ import (
 "#;
         let result = parse_file(source, "go").unwrap();
         assert_eq!(result.imports.len(), 4);
-        
+
         let fmt = result.imports.iter().find(|i| i.path == "fmt").unwrap();
         assert_eq!(fmt.names[0], "fmt");
 
         let time = result.imports.iter().find(|i| i.path == "time").unwrap();
         assert_eq!(time.names[0], "t");
 
-        let pq = result.imports.iter().find(|i| i.path == "github.com/lib/pq").unwrap();
+        let pq = result
+            .imports
+            .iter()
+            .find(|i| i.path == "github.com/lib/pq")
+            .unwrap();
         assert_eq!(pq.names[0], "_");
 
         let ctx = result.imports.iter().find(|i| i.path == "context").unwrap();

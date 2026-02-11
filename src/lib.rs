@@ -1,5 +1,5 @@
-pub mod db;
 pub mod analyzer;
+pub mod db;
 pub mod git;
 pub mod query;
 pub mod watcher;

@@ -1,7 +1,7 @@
 use tree_sitter::Node;
 
+use super::{node_text, ExtractedImport, ExtractedSymbol};
 use crate::db::models::SymbolKind;
-use super::{ExtractedSymbol, ExtractedImport, node_text};
 
 // ===========================================================================
 // TypeScript / JavaScript extractor
@@ -128,7 +128,8 @@ fn extract_ts_export(
         let text = node_text(node, source);
         if text.contains(" from ") {
             // Extract the source path
-            if let Some(source_node) = node.children(&mut node.walk())
+            if let Some(source_node) = node
+                .children(&mut node.walk())
                 .find(|c| c.kind() == "string")
             {
                 let path = node_text(source_node, source)
@@ -164,7 +165,8 @@ fn extract_ts_export(
 fn extract_ts_function(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     let name_node = node.child_by_field_name("name")?;
     let name = node_text(name_node, source);
-    let params = node.child_by_field_name("parameters")
+    let params = node
+        .child_by_field_name("parameters")
         .map(|n| node_text(n, source))
         .unwrap_or_else(|| "()".to_string());
 
@@ -190,7 +192,8 @@ fn extract_ts_class(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
             if child.kind() == "method_definition" {
                 if let Some(method_name) = child.child_by_field_name("name") {
                     let mname = node_text(method_name, source);
-                    let params = child.child_by_field_name("parameters")
+                    let params = child
+                        .child_by_field_name("parameters")
                         .map(|n| node_text(n, source))
                         .unwrap_or_else(|| "()".to_string());
                     methods.push(ExtractedSymbol {
@@ -242,17 +245,27 @@ fn extract_ts_type_alias(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     })
 }
 
-fn extract_ts_lexical(node: Node, source: &[u8], symbols: &mut Vec<ExtractedSymbol>, exported: bool) {
+fn extract_ts_lexical(
+    node: Node,
+    source: &[u8],
+    symbols: &mut Vec<ExtractedSymbol>,
+    exported: bool,
+) {
     let mut cursor = node.walk();
     for child in node.children(&mut cursor) {
         if child.kind() == "variable_declarator" {
             if let Some(name_node) = child.child_by_field_name("name") {
                 let name = node_text(name_node, source);
-                let is_function = child.child_by_field_name("value")
+                let is_function = child
+                    .child_by_field_name("value")
                     .map(|v| matches!(v.kind(), "arrow_function" | "function"))
                     .unwrap_or(false);
 
-                let kind = if is_function { SymbolKind::Function } else { SymbolKind::Constant };
+                let kind = if is_function {
+                    SymbolKind::Function
+                } else {
+                    SymbolKind::Constant
+                };
                 let prefix = if exported { "export " } else { "" };
 
                 symbols.push(ExtractedSymbol {
@@ -276,7 +289,9 @@ fn extract_ts_import(node: Node, source: &[u8]) -> Option<ExtractedImport> {
     for child in node.children(&mut cursor) {
         match child.kind() {
             "string" => {
-                path = node_text(child, source).trim_matches(|c| c == '\'' || c == '"').to_string();
+                path = node_text(child, source)
+                    .trim_matches(|c| c == '\'' || c == '"')
+                    .to_string();
             }
             "import_clause" => {
                 let mut inner = child.walk();
@@ -287,7 +302,8 @@ fn extract_ts_import(node: Node, source: &[u8]) -> Option<ExtractedImport> {
                             let mut imports_cursor = clause_child.walk();
                             for import_spec in clause_child.children(&mut imports_cursor) {
                                 if import_spec.kind() == "import_specifier" {
-                                    if let Some(name_node) = import_spec.child_by_field_name("name") {
+                                    if let Some(name_node) = import_spec.child_by_field_name("name")
+                                    {
                                         names.push(node_text(name_node, source));
                                     }
                                 }
@@ -311,7 +327,11 @@ fn extract_ts_import(node: Node, source: &[u8]) -> Option<ExtractedImport> {
     }
 
     if !path.is_empty() {
-        Some(ExtractedImport { path, kind: "import".to_string(), names })
+        Some(ExtractedImport {
+            path,
+            kind: "import".to_string(),
+            names,
+        })
     } else {
         None
     }

@@ -1,11 +1,11 @@
 use anyhow::Result;
-use notify::{Watcher, RecursiveMode, Event, EventKind};
+use notify::{Event, EventKind, RecursiveMode, Watcher};
 use std::path::Path;
 use std::sync::mpsc;
 use std::time::Duration;
 
-use crate::db::Database;
 use crate::analyzer;
+use crate::db::Database;
 
 /// Start watching for file changes and re-analyze incrementally
 pub fn watch_project(project_root: &Path) -> Result<()> {
@@ -20,7 +20,7 @@ pub fn watch_project(project_root: &Path) -> Result<()> {
     // Watch the project root (excluding .ctx and .git)
     watcher.watch(project_root, RecursiveMode::Recursive)?;
 
-    println!("  👁  Watching for changes... (Ctrl+C to stop)");
+    println!("  Watching for changes... (Ctrl+C to stop)");
 
     let db = Database::open(project_root)?;
     let mut debounce_timer = std::time::Instant::now();
@@ -31,10 +31,10 @@ pub fn watch_project(project_root: &Path) -> Result<()> {
                 // Skip events in .ctx, .git, target directories
                 let dominated_by_ignored = event.paths.iter().all(|p| {
                     let path_str = p.to_string_lossy();
-                    path_str.contains("/.ctx/") ||
-                    path_str.contains("/.git/") ||
-                    path_str.contains("/target/") ||
-                    path_str.contains("/node_modules/")
+                    path_str.contains("/.ctx/")
+                        || path_str.contains("/.git/")
+                        || path_str.contains("/target/")
+                        || path_str.contains("/node_modules/")
                 });
 
                 if dominated_by_ignored {
@@ -45,14 +45,16 @@ pub fn watch_project(project_root: &Path) -> Result<()> {
                     EventKind::Create(_) | EventKind::Modify(_) | EventKind::Remove(_) => {
                         // Debounce: wait at least 1 second between re-analyses
                         if debounce_timer.elapsed() > Duration::from_secs(1) {
-                            println!("  ⟳  Change detected, re-analyzing...");
+                            println!("  Change detected, re-analyzing...");
                             match analyzer::analyze_project(&db, project_root) {
                                 Ok(result) => {
-                                    println!("  ✓  Updated: {} files, {} symbols",
-                                        result.analyzed_files, result.total_symbols);
+                                    println!(
+                                        "  OK  Updated: {} files, {} symbols",
+                                        result.analyzed_files, result.total_symbols
+                                    );
                                 }
                                 Err(e) => {
-                                    eprintln!("  ✗  Analysis error: {}", e);
+                                    eprintln!("  ERROR  Analysis error: {}", e);
                                 }
                             }
                             debounce_timer = std::time::Instant::now();

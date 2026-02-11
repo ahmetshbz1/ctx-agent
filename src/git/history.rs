@@ -29,7 +29,9 @@ pub fn analyze_git_history(db: &Database, project_root: &Path) -> Result<GitAnal
 
     let mut revwalk = repo.revwalk()?;
     revwalk.set_sorting(Sort::TIME)?;
-    revwalk.push_head().context("Failed to push HEAD to revwalk")?;
+    revwalk
+        .push_head()
+        .context("Failed to push HEAD to revwalk")?;
 
     let mut file_stats: HashMap<String, GitFileStats> = HashMap::new();
     let mut decisions_found = 0;
@@ -68,9 +70,7 @@ pub fn analyze_git_history(db: &Database, project_root: &Path) -> Result<GitAnal
             Err(_) => continue,
         };
 
-        let parent_tree = commit.parent(0)
-            .ok()
-            .and_then(|p| p.tree().ok());
+        let parent_tree = commit.parent(0).ok().and_then(|p| p.tree().ok());
 
         let diff = match repo.diff_tree_to_tree(parent_tree.as_ref(), Some(&tree), None) {
             Ok(d) => d,
@@ -96,7 +96,8 @@ pub fn analyze_git_history(db: &Database, project_root: &Path) -> Result<GitAnal
             None,
             None,
             None,
-        ).ok();
+        )
+        .ok();
 
         // Detect decisions from commit messages
         // Conventional commits with "feat:", "fix:", "refactor:", "breaking:" etc.
@@ -111,20 +112,21 @@ pub fn analyze_git_history(db: &Database, project_root: &Path) -> Result<GitAnal
             || message.contains("switch from");
 
         if is_decision && !message.is_empty() {
-            let related = serde_json::to_string(&changed_files).unwrap_or_else(|_| "[]".to_string());
-            db.insert_decision(
-                message.trim(),
-                "commit",
-                Some(&oid.to_string()),
-                &related,
-            ).ok();
-            decisions_found += 1;
+            let related =
+                serde_json::to_string(&changed_files).unwrap_or_else(|_| "[]".to_string());
+            if db
+                .insert_decision(message.trim(), "commit", Some(&oid.to_string()), &related)
+                .unwrap_or(false)
+            {
+                decisions_found += 1;
+            }
         }
     }
 
     // Store file stats
     let mut files_with_stats = 0;
-    let max_commit_count = file_stats.values()
+    let max_commit_count = file_stats
+        .values()
         .map(|s| s.commit_count)
         .max()
         .unwrap_or(1) as f64;

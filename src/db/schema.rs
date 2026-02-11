@@ -3,7 +3,8 @@ use rusqlite::Connection;
 
 /// Run all schema migrations
 pub fn run_migrations(conn: &Connection) -> Result<()> {
-    conn.execute_batch("
+    conn.execute_batch(
+        "
         CREATE TABLE IF NOT EXISTS files (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             path            TEXT NOT NULL UNIQUE,
@@ -43,6 +44,11 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             related_files   TEXT NOT NULL DEFAULT '[]'
         );
 
+        CREATE TABLE IF NOT EXISTS meta (
+            key             TEXT PRIMARY KEY,
+            value           TEXT NOT NULL
+        );
+
         CREATE TABLE IF NOT EXISTS knowledge (
             id              INTEGER PRIMARY KEY AUTOINCREMENT,
             content         TEXT NOT NULL,
@@ -66,10 +72,30 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
         CREATE INDEX IF NOT EXISTS idx_deps_from ON dependencies(from_file_id);
         CREATE INDEX IF NOT EXISTS idx_deps_to ON dependencies(to_file_id);
         CREATE INDEX IF NOT EXISTS idx_knowledge_file ON knowledge(related_file);
-    ")?;
+    ",
+    )?;
+
+    // Keep only one decision row per commit hash before enabling uniqueness.
+    conn.execute_batch(
+        "
+        DELETE FROM decisions
+        WHERE source = 'commit'
+          AND commit_hash IS NOT NULL
+          AND id NOT IN (
+              SELECT MIN(id) FROM decisions
+              WHERE source = 'commit' AND commit_hash IS NOT NULL
+              GROUP BY commit_hash
+          );
+
+        CREATE UNIQUE INDEX IF NOT EXISTS idx_decisions_commit_hash_unique
+            ON decisions(commit_hash)
+            WHERE source = 'commit' AND commit_hash IS NOT NULL;
+    ",
+    )?;
 
     // FTS5 virtual table for full-text search
-    conn.execute_batch("
+    conn.execute_batch(
+        "
         CREATE VIRTUAL TABLE IF NOT EXISTS search_index USING fts5(
             name,
             path,
@@ -77,7 +103,8 @@ pub fn run_migrations(conn: &Connection) -> Result<()> {
             signature,
             tokenize='porter unicode61'
         );
-    ")?;
+    ",
+    )?;
 
     Ok(())
 }

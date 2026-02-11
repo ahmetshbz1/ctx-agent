@@ -46,16 +46,27 @@ fn detect_language(ext: &str) -> Option<&'static str> {
 
 /// Languages we can parse with tree-sitter
 pub fn is_parseable(language: &str) -> bool {
-    matches!(language, "typescript" | "javascript" | "python" | "rust" | "go")
+    matches!(
+        language,
+        "typescript"
+            | "javascript"
+            | "python"
+            | "rust"
+            | "go"
+            | "c"
+            | "cpp"
+            | "csharp"
+            | "java"
+            | "php"
+            | "ruby"
+            | "shell"
+            | "bash"
+    )
 }
 
 /// Compute a simple hash of file content
 fn hash_content(content: &str) -> String {
-    use std::collections::hash_map::DefaultHasher;
-    use std::hash::{Hash, Hasher};
-    let mut hasher = DefaultHasher::new();
-    content.hash(&mut hasher);
-    format!("{:016x}", hasher.finish())
+    blake3::hash(content.as_bytes()).to_hex().to_string()
 }
 
 /// Scan a project directory and return all source files
@@ -63,17 +74,29 @@ pub fn scan_project(root: &Path) -> Result<Vec<ScannedFile>> {
     let mut files = Vec::new();
 
     let walker = WalkBuilder::new(root)
-        .hidden(true)           // skip hidden files
-        .git_ignore(true)       // respect .gitignore
+        .hidden(true) // skip hidden files
+        .git_ignore(true) // respect .gitignore
         .git_global(true)
         .git_exclude(true)
         .filter_entry(|entry| {
             let name = entry.file_name().to_string_lossy();
             // Skip common non-source directories
-            !matches!(name.as_ref(),
-                "node_modules" | ".git" | ".ctx" | "target" | "__pycache__" |
-                ".next" | "dist" | "build" | ".venv" | "venv" | ".tox" |
-                "vendor" | "coverage" | ".cache"
+            !matches!(
+                name.as_ref(),
+                "node_modules"
+                    | ".git"
+                    | ".ctx"
+                    | "target"
+                    | "__pycache__"
+                    | ".next"
+                    | "dist"
+                    | "build"
+                    | ".venv"
+                    | "venv"
+                    | ".tox"
+                    | "vendor"
+                    | "coverage"
+                    | ".cache"
             )
         })
         .build();
@@ -84,18 +107,21 @@ pub fn scan_project(root: &Path) -> Result<Vec<ScannedFile>> {
             Err(_) => continue,
         };
 
-        if !entry.file_type().map_or(false, |ft| ft.is_file()) {
+        if !entry.file_type().is_some_and(|ft| ft.is_file()) {
             continue;
         }
 
         let path = entry.path();
-        let ext = path.extension()
-            .and_then(|e| e.to_str())
-            .unwrap_or("");
+        let ext = path.extension().and_then(|e| e.to_str()).unwrap_or("");
+        let file_name = path.file_name().and_then(|n| n.to_str()).unwrap_or("");
 
-        let language = match detect_language(ext) {
-            Some(lang) => lang,
-            None => continue, // skip unknown file types
+        let language = if file_name.eq_ignore_ascii_case("dockerfile") {
+            "dockerfile"
+        } else {
+            match detect_language(ext) {
+                Some(lang) => lang,
+                None => continue, // skip unknown file types
+            }
         };
 
         // Read file content
@@ -104,7 +130,8 @@ pub fn scan_project(root: &Path) -> Result<Vec<ScannedFile>> {
             Err(_) => continue, // skip binary/unreadable files
         };
 
-        let relative_path = path.strip_prefix(root)
+        let relative_path = path
+            .strip_prefix(root)
             .unwrap_or(path)
             .to_string_lossy()
             .to_string();

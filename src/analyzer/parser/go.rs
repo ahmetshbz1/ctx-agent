@@ -1,6 +1,6 @@
-use tree_sitter::Node;
+use super::{node_text, ExtractedImport, ExtractedSymbol};
 use crate::db::models::SymbolKind;
-use super::{ExtractedSymbol, ExtractedImport, node_text};
+use tree_sitter::Node;
 
 /// Extract Go symbols and imports from a tree-sitter AST
 pub fn extract_go(
@@ -96,7 +96,8 @@ fn extract_go_method(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     let name = node_text(name_node, source);
 
     // Get receiver type for signature
-    let receiver = node.child_by_field_name("receiver")
+    let receiver = node
+        .child_by_field_name("receiver")
         .map(|r| node_text(r, source));
 
     let signature = build_func_signature(node, source, receiver.as_deref());
@@ -112,20 +113,23 @@ fn extract_go_method(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
 }
 
 fn build_func_signature(node: Node, source: &[u8], receiver: Option<&str>) -> String {
-    let name = node.child_by_field_name("name")
+    let name = node
+        .child_by_field_name("name")
         .map(|n| node_text(n, source))
         .unwrap_or_default();
 
-    let params = node.child_by_field_name("parameters")
+    let params = node
+        .child_by_field_name("parameters")
         .map(|n| node_text(n, source))
         .unwrap_or("()".to_string());
 
-    let result = node.child_by_field_name("result")
+    let result = node
+        .child_by_field_name("result")
         .map(|n| format!(" {}", node_text(n, source)))
         .unwrap_or_default();
 
     match receiver {
-        Some(recv) => format!("func {} {}{}{}",  recv, name, params, result),
+        Some(recv) => format!("func {} {}{}{}", recv, name, params, result),
         None => format!("func {}{}{}", name, params, result),
     }
 }
@@ -205,7 +209,8 @@ fn extract_struct_fields(node: Node, source: &[u8]) -> Vec<ExtractedSymbol> {
                     // Get field name(s)
                     if let Some(name_node) = field.child_by_field_name("name") {
                         let name = node_text(name_node, source);
-                        let type_str = field.child_by_field_name("type")
+                        let type_str = field
+                            .child_by_field_name("type")
                             .map(|t| node_text(t, source))
                             .unwrap_or_default();
 
@@ -263,15 +268,20 @@ fn extract_go_const(node: Node, source: &[u8], symbols: &mut Vec<ExtractedSymbol
         if child.kind() == "const_spec" {
             if let Some(name_node) = child.child_by_field_name("name") {
                 let name = node_text(name_node, source);
-                let type_str = child.child_by_field_name("type")
+                let type_str = child
+                    .child_by_field_name("type")
                     .map(|t| format!(" {}", node_text(t, source)))
                     .unwrap_or_default();
 
-                let value = child.child_by_field_name("value")
+                let value = child
+                    .child_by_field_name("value")
                     .map(|v| {
                         let val = node_text(v, source);
-                        if val.len() > 40 { format!(" = {}...", &val[..37]) }
-                        else { format!(" = {}", val) }
+                        if val.len() > 40 {
+                            format!(" = {}...", &val[..37])
+                        } else {
+                            format!(" = {}", val)
+                        }
                     })
                     .unwrap_or_default();
 
@@ -295,7 +305,8 @@ fn extract_go_var(node: Node, source: &[u8], symbols: &mut Vec<ExtractedSymbol>)
         if child.kind() == "var_spec" {
             if let Some(name_node) = child.child_by_field_name("name") {
                 let name = node_text(name_node, source);
-                let type_str = child.child_by_field_name("type")
+                let type_str = child
+                    .child_by_field_name("type")
                     .map(|t| node_text(t, source))
                     .unwrap_or_default();
 
@@ -348,7 +359,8 @@ fn extract_import_spec(node: Node, source: &[u8]) -> Option<ExtractedImport> {
     let path = raw_path.trim_matches('"').to_string();
 
     // Check for alias
-    let alias = node.child_by_field_name("name")
+    let alias = node
+        .child_by_field_name("name")
         .map(|n| node_text(n, source));
 
     let names = match alias {

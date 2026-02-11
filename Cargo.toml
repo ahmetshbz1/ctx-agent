@@ -13,11 +13,20 @@ clap = { version = "4", features = ["derive"] }
 rusqlite = { version = "0.31", features = ["bundled"] }
 
 # Tree-sitter
-tree-sitter = "0.22"
-tree-sitter-typescript = "0.21"
-tree-sitter-javascript = "0.21"
-tree-sitter-python = "0.21"
-tree-sitter-rust = "0.21"
+tree-sitter = "0.24.5"
+tree-sitter-typescript = "0.23"
+tree-sitter-javascript = "0.23"
+tree-sitter-python = "0.23"
+tree-sitter-rust = "0.23"
+tree-sitter-go = "0.23"
+tree-sitter-c = "0.23"
+tree-sitter-cpp = "0.23"
+tree-sitter-c-sharp = "0.23"
+tree-sitter-java = "0.23"
+# skipped kotlin/swift due to version mismatch
+tree-sitter-php = "0.24"
+tree-sitter-ruby = "0.23"
+tree-sitter-bash = "0.23"
 
 # Git
 git2 = "0.18"
@@ -35,7 +44,7 @@ colored = "2"
 
 # Error handling
 anyhow = "1"
+blake3 = "1"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
-tree-sitter-go = "0.21"

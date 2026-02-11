@@ -1,7 +1,7 @@
 use tree_sitter::Node;
 
+use super::{node_text, ExtractedImport, ExtractedSymbol};
 use crate::db::models::SymbolKind;
-use super::{ExtractedSymbol, ExtractedImport, node_text};
 
 // ===========================================================================
 // Rust extractor
@@ -91,7 +91,8 @@ pub fn extract_rust(
             }
             "use_declaration" => {
                 let text = node_text(child, source);
-                let path = text.trim_start_matches("use ")
+                let path = text
+                    .trim_start_matches("use ")
                     .trim_end_matches(';')
                     .to_string();
                 imports.push(ExtractedImport {
@@ -111,6 +112,15 @@ pub fn extract_rust(
                         signature: format!("mod {}", n),
                         children: vec![],
                     });
+
+                    // External module declarations (e.g. `mod foo;`) are real file dependencies.
+                    if child.child_by_field_name("body").is_none() {
+                        imports.push(ExtractedImport {
+                            path: n,
+                            kind: "mod".to_string(),
+                            names: vec![],
+                        });
+                    }
                 }
             }
             _ => {}
@@ -121,10 +131,12 @@ pub fn extract_rust(
 fn extract_rust_function(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     let name_node = node.child_by_field_name("name")?;
     let name = node_text(name_node, source);
-    let params = node.child_by_field_name("parameters")
+    let params = node
+        .child_by_field_name("parameters")
         .map(|n| node_text(n, source))
         .unwrap_or_else(|| "()".to_string());
-    let ret = node.child_by_field_name("return_type")
+    let ret = node
+        .child_by_field_name("return_type")
         .map(|n| format!(" -> {}", node_text(n, source)))
         .unwrap_or_default();
 
@@ -140,7 +152,8 @@ fn extract_rust_function(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
 
 fn extract_rust_impl(node: Node, source: &[u8], symbols: &mut Vec<ExtractedSymbol>) {
     // Get the type name being implemented
-    let type_name = node.child_by_field_name("type")
+    let type_name = node
+        .child_by_field_name("type")
         .map(|n| node_text(n, source))
         .unwrap_or_else(|| "Unknown".to_string());
 

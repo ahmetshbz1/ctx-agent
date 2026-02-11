@@ -1,7 +1,7 @@
 use std::collections::{HashSet, VecDeque};
 
-use anyhow::Result;
 use crate::db::Database;
+use anyhow::Result;
 
 /// Compute the blast radius of a file: all files that would be affected
 /// if this file changes (transitive dependents)

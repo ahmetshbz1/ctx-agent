@@ -1,4 +1,5 @@
 use serde::{Deserialize, Serialize};
+use std::str::FromStr;
 
 /// A tracked file in the project
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -41,7 +42,7 @@ impl SymbolKind {
         }
     }
 
-    pub fn from_str(s: &str) -> Self {
+    pub fn from_db_str(s: &str) -> Self {
         match s {
             "function" => Self::Function,
             "method" => Self::Method,
@@ -66,6 +67,25 @@ impl SymbolKind {
             Self::Constant => "K",
             Self::TypeAlias => "T",
             Self::Module => "M",
+        }
+    }
+}
+
+impl FromStr for SymbolKind {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "function" => Ok(Self::Function),
+            "method" => Ok(Self::Method),
+            "class" => Ok(Self::Class),
+            "struct" => Ok(Self::Struct),
+            "interface" => Ok(Self::Interface),
+            "enum" => Ok(Self::Enum),
+            "constant" => Ok(Self::Constant),
+            "type_alias" => Ok(Self::TypeAlias),
+            "module" => Ok(Self::Module),
+            _ => Err(()),
         }
     }
 }

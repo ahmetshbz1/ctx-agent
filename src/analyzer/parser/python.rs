@@ -1,7 +1,7 @@
 use tree_sitter::Node;
 
+use super::{node_text, ExtractedImport, ExtractedSymbol};
 use crate::db::models::SymbolKind;
-use super::{ExtractedSymbol, ExtractedImport, node_text};
 
 // ===========================================================================
 // Python extractor
@@ -53,16 +53,15 @@ fn extract_decorated(
     for child in node.children(&mut cursor) {
         match child.kind() {
             "decorator" => {
-                let dec_text = node_text(child, source)
-                    .trim_start_matches('@')
-                    .to_string();
+                let dec_text = node_text(child, source).trim_start_matches('@').to_string();
                 decorators.push(dec_text);
             }
             "function_definition" => {
                 if let Some(mut sym) = extract_python_function(child, source) {
                     // Prepend decorators to signature
                     if !decorators.is_empty() {
-                        let dec_str = decorators.iter()
+                        let dec_str = decorators
+                            .iter()
                             .map(|d| format!("@{}", d))
                             .collect::<Vec<_>>()
                             .join(" ");
@@ -76,7 +75,8 @@ fn extract_decorated(
             "class_definition" => {
                 if let Some(mut sym) = extract_python_class(child, source) {
                     if !decorators.is_empty() {
-                        let dec_str = decorators.iter()
+                        let dec_str = decorators
+                            .iter()
                             .map(|d| format!("@{}", d))
                             .collect::<Vec<_>>()
                             .join(" ");
@@ -94,12 +94,14 @@ fn extract_decorated(
 fn extract_python_function(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     let name_node = node.child_by_field_name("name")?;
     let name = node_text(name_node, source);
-    let params = node.child_by_field_name("parameters")
+    let params = node
+        .child_by_field_name("parameters")
         .map(|n| node_text(n, source))
         .unwrap_or_else(|| "()".to_string());
 
     // Extract return type annotation if present
-    let ret = node.child_by_field_name("return_type")
+    let ret = node
+        .child_by_field_name("return_type")
         .map(|n| format!(" -> {}", node_text(n, source)))
         .unwrap_or_default();
 
@@ -118,7 +120,8 @@ fn extract_python_class(node: Node, source: &[u8]) -> Option<ExtractedSymbol> {
     let name = node_text(name_node, source);
 
     // Extract superclasses
-    let superclass = node.child_by_field_name("superclasses")
+    let superclass = node
+        .child_by_field_name("superclasses")
         .map(|n| node_text(n, source))
         .unwrap_or_default();
 
@@ -198,7 +201,11 @@ fn extract_python_import(node: Node, source: &[u8]) -> Option<ExtractedImport> {
             }
         }
         if !path.is_empty() {
-            return Some(ExtractedImport { path, kind: "import".to_string(), names });
+            return Some(ExtractedImport {
+                path,
+                kind: "import".to_string(),
+                names,
+            });
         }
     } else {
         // Regular import
@@ -206,7 +213,11 @@ fn extract_python_import(node: Node, source: &[u8]) -> Option<ExtractedImport> {
         for child in node.children(&mut cursor) {
             if child.kind() == "dotted_name" {
                 let path = node_text(child, source);
-                return Some(ExtractedImport { path, kind: "import".to_string(), names: vec![] });
+                return Some(ExtractedImport {
+                    path,
+                    kind: "import".to_string(),
+                    names: vec![],
+                });
             }
         }
     }
