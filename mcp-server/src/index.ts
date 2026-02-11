@@ -41,6 +41,20 @@ function findCtxBinary(): string {
 
 const CTX_BIN = findCtxBinary();
 
+// ── Auto-init: ensure project is initialized ────────────────────────
+
+function ensureInitialized(projectPath: string): void {
+    const ctxDir = resolve(projectPath, ".ctx");
+    if (!existsSync(ctxDir)) {
+        execSync(`"${CTX_BIN}" -p "${projectPath}" init`, {
+            encoding: "utf-8",
+            timeout: 60_000,
+            env: { ...process.env, NO_COLOR: "1" },
+            maxBuffer: 10 * 1024 * 1024,
+        });
+    }
+}
+
 // ── Helper: run ctx CLI command ─────────────────────────────────────
 
 interface CtxResult {
@@ -48,7 +62,16 @@ interface CtxResult {
     output: string;
 }
 
-function runCtx(args: string, projectPath: string): CtxResult {
+function runCtx(args: string, projectPath: string, skipAutoInit = false): CtxResult {
+    // Auto-initialize if needed (skip for init command itself)
+    if (!skipAutoInit) {
+        try {
+            ensureInitialized(projectPath);
+        } catch {
+            // init failed, continue anyway — the actual command will show the error
+        }
+    }
+
     const cmd = `"${CTX_BIN}" -p "${projectPath}" ${args}`;
     try {
         const output = execSync(cmd, {
@@ -88,7 +111,7 @@ server.tool(
     "Initialize ctx in a project directory. Creates .ctx/ database, scans all files, extracts symbols (functions, classes, structs), maps dependencies, and analyzes git history for decisions.",
     ProjectPathSchema.shape,
     async ({ project_path }) => {
-        const { output } = runCtx("init", project_path);
+        const { output } = runCtx("init", project_path, true);
         return { content: [{ type: "text" as const, text: output }] };
     }
 );

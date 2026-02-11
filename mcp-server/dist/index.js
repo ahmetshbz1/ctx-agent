@@ -34,7 +34,28 @@ function findCtxBinary() {
     throw new Error("ctx binary not found. Set CTX_BIN env var or build with: cargo build --release");
 }
 const CTX_BIN = findCtxBinary();
-function runCtx(args, projectPath) {
+// ── Auto-init: ensure project is initialized ────────────────────────
+function ensureInitialized(projectPath) {
+    const ctxDir = resolve(projectPath, ".ctx");
+    if (!existsSync(ctxDir)) {
+        execSync(`"${CTX_BIN}" -p "${projectPath}" init`, {
+            encoding: "utf-8",
+            timeout: 60_000,
+            env: { ...process.env, NO_COLOR: "1" },
+            maxBuffer: 10 * 1024 * 1024,
+        });
+    }
+}
+function runCtx(args, projectPath, skipAutoInit = false) {
+    // Auto-initialize if needed (skip for init command itself)
+    if (!skipAutoInit) {
+        try {
+            ensureInitialized(projectPath);
+        }
+        catch {
+            // init failed, continue anyway — the actual command will show the error
+        }
+    }
     const cmd = `"${CTX_BIN}" -p "${projectPath}" ${args}`;
     try {
         const output = execSync(cmd, {
@@ -65,7 +86,7 @@ const server = new McpServer({
 });
 // ── Tool: ctx_init ──────────────────────────────────────────────────
 server.tool("ctx_init", "Initialize ctx in a project directory. Creates .ctx/ database, scans all files, extracts symbols (functions, classes, structs), maps dependencies, and analyzes git history for decisions.", ProjectPathSchema.shape, async ({ project_path }) => {
-    const { output } = runCtx("init", project_path);
+    const { output } = runCtx("init", project_path, true);
     return { content: [{ type: "text", text: output }] };
 });
 // ── Tool: ctx_status ────────────────────────────────────────────────
