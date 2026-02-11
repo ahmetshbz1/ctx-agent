@@ -2,6 +2,10 @@ mod rust_ext;
 mod typescript;
 mod python;
 
+#[cfg(test)]
+#[path = "tests.rs"]
+mod tests;
+
 use anyhow::Result;
 use tree_sitter::{Language, Parser, Node};
 
