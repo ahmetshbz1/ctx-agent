@@ -46,7 +46,7 @@ fn detect_language(ext: &str) -> Option<&'static str> {
 
 /// Languages we can parse with tree-sitter
 pub fn is_parseable(language: &str) -> bool {
-    matches!(language, "typescript" | "javascript" | "python" | "rust")
+    matches!(language, "typescript" | "javascript" | "python" | "rust" | "go")
 }
 
 /// Compute a simple hash of file content

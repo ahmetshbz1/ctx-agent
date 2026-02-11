@@ -1,6 +1,7 @@
 mod rust_ext;
 mod typescript;
 mod python;
+mod go;
 
 #[cfg(test)]
 #[path = "tests.rs"]
@@ -14,6 +15,7 @@ use crate::db::models::SymbolKind;
 pub use rust_ext::extract_rust;
 pub use typescript::extract_ts_js;
 pub use python::extract_python;
+pub use go::extract_go;
 
 /// A symbol extracted from parsing a file
 #[derive(Debug, Clone)]
@@ -48,6 +50,7 @@ fn get_language(lang: &str) -> Option<Language> {
         "javascript" | "jsx" => Some(tree_sitter_javascript::language()),
         "python" => Some(tree_sitter_python::language()),
         "rust" => Some(tree_sitter_rust::language()),
+        "go" => Some(tree_sitter_go::language()),
         _ => None,
     }
 }
@@ -77,6 +80,7 @@ pub fn parse_file(source: &str, language: &str) -> Result<ParseResult> {
         "typescript" | "javascript" | "tsx" | "jsx" => extract_ts_js(root, source_bytes, &mut symbols, &mut imports),
         "python" => extract_python(root, source_bytes, &mut symbols, &mut imports),
         "rust" => extract_rust(root, source_bytes, &mut symbols, &mut imports),
+        "go" => extract_go(root, source_bytes, &mut symbols, &mut imports),
         _ => {}
     }
 

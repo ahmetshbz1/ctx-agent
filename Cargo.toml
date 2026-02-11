@@ -38,3 +38,4 @@ anyhow = "1"
 
 # Time
 chrono = { version = "0.4", features = ["serde"] }
+tree-sitter-go = "0.21"

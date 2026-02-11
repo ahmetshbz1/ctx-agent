@@ -270,8 +270,8 @@ def add(a: int, b: int) -> int:
 
     #[test]
     fn test_parse_unsupported_language() {
-        let source = "package main\nfunc main() {}";
-        let result = parse_file(source, "go").unwrap();
+        let source = "def main\n  puts 'hello'\nend";
+        let result = parse_file(source, "ruby").unwrap();
         assert!(result.symbols.is_empty());
         assert!(result.imports.is_empty());
     }
@@ -304,5 +304,120 @@ fn second() {}
         for sym in &result.symbols {
             assert!(sym.start_line >= 1, "start_line should be >= 1, got {}", sym.start_line);
         }
+    }
+
+    // =====================================================================
+    // Go parser tests
+    // =====================================================================
+
+    #[test]
+    fn test_parse_go_function() {
+        let source = r#"
+package main
+import "fmt"
+
+func greet(name string) string {
+    return fmt.Sprintf("Hello, %s", name)
+}
+"#;
+        let result = parse_file(source, "go").unwrap();
+        
+        let func_sym = result.symbols.iter().find(|s| s.name == "greet").unwrap();
+        assert!(matches!(func_sym.kind, SymbolKind::Function));
+        assert!(func_sym.signature.contains("func greet"));
+        
+        let pkg_sym = result.symbols.iter().find(|s| s.name == "main").unwrap();
+        assert!(matches!(pkg_sym.kind, SymbolKind::Module));
+
+        assert_eq!(result.imports.len(), 1);
+        assert_eq!(result.imports[0].path, "fmt");
+    }
+
+    #[test]
+    fn test_parse_go_struct_and_methods() {
+        let source = r#"
+package main
+
+type User struct {
+    Name  string
+    Email string
+}
+
+func (u *User) GetName() string {
+    return u.Name
+}
+"#;
+        let result = parse_file(source, "go").unwrap();
+        
+        let struct_sym = result.symbols.iter().find(|s| s.name == "User").unwrap();
+        assert!(matches!(struct_sym.kind, SymbolKind::Struct));
+        // Fields are extracted as children
+        assert!(struct_sym.children.len() >= 2); 
+
+        let method_sym = result.symbols.iter().find(|s| s.name == "GetName").unwrap();
+        assert!(matches!(method_sym.kind, SymbolKind::Method));
+        assert!(method_sym.signature.contains("(u *User)"));
+    }
+
+    #[test]
+    fn test_parse_go_interface() {
+        let source = r#"
+package main
+
+type Reader interface {
+    Read(p []byte) (n int, err error)
+    Close() error
+}
+"#;
+        let result = parse_file(source, "go").unwrap();
+        
+        let iface_sym = result.symbols.iter().find(|s| s.name == "Reader").unwrap();
+        assert!(matches!(iface_sym.kind, SymbolKind::Interface));
+        assert_eq!(iface_sym.children.len(), 2); // Read, Close
+    }
+
+    #[test]
+    fn test_parse_go_variables_and_constants() {
+        let source = r#"
+package main
+
+const Version = "1.0.0"
+var Debug = false
+"#;
+        let result = parse_file(source, "go").unwrap();
+        
+        let const_sym = result.symbols.iter().find(|s| s.name == "Version").unwrap();
+        assert!(matches!(const_sym.kind, SymbolKind::Constant));
+        
+        let var_sym = result.symbols.iter().find(|s| s.name == "Debug").unwrap();
+        assert!(matches!(var_sym.kind, SymbolKind::Constant));
+    }
+
+    #[test]
+    fn test_parse_go_imports() {
+        let source = r#"
+package main
+
+import (
+    "fmt"
+    t "time"
+    _ "github.com/lib/pq"
+    . "context"
+)
+"#;
+        let result = parse_file(source, "go").unwrap();
+        assert_eq!(result.imports.len(), 4);
+        
+        let fmt = result.imports.iter().find(|i| i.path == "fmt").unwrap();
+        assert_eq!(fmt.names[0], "fmt");
+
+        let time = result.imports.iter().find(|i| i.path == "time").unwrap();
+        assert_eq!(time.names[0], "t");
+
+        let pq = result.imports.iter().find(|i| i.path == "github.com/lib/pq").unwrap();
+        assert_eq!(pq.names[0], "_");
+
+        let ctx = result.imports.iter().find(|i| i.path == "context").unwrap();
+        assert_eq!(ctx.names[0], "*");
     }
 }
