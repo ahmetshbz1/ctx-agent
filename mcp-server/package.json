@@ -1,0 +1,22 @@
+{
+  "name": "ctx-mcp-server",
+  "version": "1.0.0",
+  "description": "MCP server for ctx — Universal Agent Context Protocol",
+  "main": "dist/index.js",
+  "type": "module",
+  "bin": {
+    "ctx-mcp": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "dev": "tsc && node dist/index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.26.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.15.21",
+    "typescript": "^5.8.3"
+  }
+}
