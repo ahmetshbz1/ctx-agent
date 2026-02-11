@@ -1,7 +1,7 @@
 <p align="center">
-  <h1 align="center">ctx</h1>
-  <p align="center"><strong>Universal Agent Context Protocol</strong></p>
-  <p align="center">Live codebase intelligence for AI agents. Zero dependencies, local-first, offline-capable.</p>
+  <h1 align="center">ctx-agent</h1>
+  <p align="center"><strong>Agent Context Protocol</strong></p>
+  <p align="center">Structured codebase intelligence for AI agents.<br/>Local-first. Offline-capable. Zero dependencies.</p>
 </p>
 
 <p align="center">
@@ -13,67 +13,94 @@
 
 ---
 
-## What is ctx?
+> **One-liner:** ctx-agent lets an AI agent answer *"if I change this file, what breaks?"* without running the code.
 
-**ctx** is a Rust CLI tool that gives AI agents deep, structured understanding of any codebase. It scans your project, extracts symbols using tree-sitter, maps dependencies, analyzes git history, and stores everything in a single local SQLite file — queryable via CLI or MCP protocol.
+---
+
+## What is ctx-agent?
+
+**ctx-agent** is a Rust CLI that gives AI agents deep, structured understanding of any codebase. It scans your project, extracts symbols using tree-sitter, maps dependencies, analyzes git history, and stores everything in a single local SQLite file — queryable via CLI or [MCP protocol](https://modelcontextprotocol.io/).
 
 **No LLM required. No cloud. No API keys. Just intelligence.**
 
 ```
-$ ctx init
-  ctx — Universal Agent Context Protocol
+$ ctx-agent init
+  ctx-agent — Agent Context Protocol
 
   ✓ Created .ctx/ctx.db
   ⟳ Scanning project... done
-    16 files discovered
-    109 symbols extracted
-    54 dependencies mapped
+    21 files discovered
+    119 symbols extracted
+    61 dependencies mapped
   ⟳ Analyzing git history... done
-    4 commits analyzed
-    2 decisions extracted
+    8 commits analyzed
+    3 decisions extracted
 
-  ✓ Initialized in 1.7s
+  ✓ Initialized in 0.1s
 ```
+
+## What ctx-agent is NOT
+
+- **Not an LLM** — It doesn't generate code or answers. It provides structured context that agents consume.
+- **Not a linter/compiler** — It doesn't guarantee semantic correctness. It reads structure, not behavior.
+- **Not a runtime analyzer** — No execution tracing, profiling, or dynamic analysis. Purely static.
+- **Not a Language Server** — No code completion, go-to-definition, or refactoring. Different problem space.
 
 ## Features
 
 | Feature | Description |
 |---------|-------------|
-| **📦 Codebase Map** | Directory tree with file counts, line counts, and symbols per file |
-| **🔣 Symbol Extraction** | Functions, classes, structs, interfaces, enums, methods — with full signatures |
-| **🔗 Dependency Graph** | Import/export analysis with blast radius calculation |
-| **📋 Decision Tracking** | Auto-extracts decisions from conventional commits |
-| **🔍 Full-Text Search** | FTS5-powered search across all symbols |
-| **📊 Health Warnings** | Fragile files, dead code, large file detection |
-| **🧠 Knowledge Notes** | Store architectural insights and gotchas |
-| **👁 File Watcher** | Live re-analysis on file changes |
-| **🤖 MCP Server** | AI agents connect via Model Context Protocol |
+| 📦 **Codebase Map** | Directory tree with file counts, line counts, and symbols per file |
+| 🔣 **Symbol Extraction** | Functions, classes, structs, interfaces, enums — with full signatures |
+| 🔗 **Dependency Graph** | Import/export analysis with blast radius calculation |
+| 📋 **Decision Tracking** | Auto-extracts decisions from conventional commits |
+| 🔍 **Full-Text Search** | FTS5-powered symbol search with partial matching |
+| 📊 **Health Warnings** | Fragile files, dead code, large file detection |
+| 🧠 **Knowledge Notes** | Store architectural insights and gotchas |
+| 👁 **File Watcher** | Live re-analysis on file changes |
+| 🤖 **MCP Server** | AI agents connect via Model Context Protocol |
+| 📤 **JSON Output** | Machine-readable output for agent consumption |
 
-## Supported Languages
+## How ctx-agent Compares
 
-| Language | Symbols | Imports |
-|----------|---------|---------|
-| Rust | ✅ Functions, Structs, Enums, Impls, Modules | ✅ `use` statements |
-| TypeScript/JavaScript | ✅ Functions, Classes, Interfaces, Types | ✅ `import` statements |
-| Python | ✅ Functions, Classes | ✅ `import`/`from` statements |
-| Go, Java, C, C++, Ruby, PHP, Swift, Kotlin, Scala, Zig, Elixir, Haskell, OCaml, Lua, Dart, R, Julia, Dockerfile, Makefile, Shell | ✅ File tracking, line counts | ❌ (tree-sitter grammars not yet added) |
+| Feature | ctx-agent | ctags/LSP | Sourcegraph | Copilot Context |
+|---------|-----------|-----------|-------------|-----------------|
+| Local-first | ✅ | ✅ | ❌ (server) | ❌ (cloud) |
+| Agent-native (MCP) | ✅ | ❌ | ❌ | ❌ |
+| Offline | ✅ | ✅ | ❌ | ❌ |
+| Incremental scan | ✅ | ✅ | ❌ | N/A |
+| Blast radius | ✅ | ❌ | ✅ | ❌ |
+| Decision tracking | ✅ | ❌ | ❌ | ❌ |
+| Single portable file | ✅ (SQLite) | ✅ (tags) | ❌ | ❌ |
+| Health warnings | ✅ | ❌ | ❌ | ❌ |
+
+**ctx-agent fills a specific gap:** giving AI agents codebase memory without cloud, servers, or LLMs.
+
+## Language Support
+
+| Language | Symbols | Imports | Status |
+|----------|---------|---------|--------|
+| **Rust** | ✅ Functions, Structs, Enums, Impls, Modules | ✅ `use` statements | Full |
+| **TypeScript/JavaScript** | ✅ Functions, Classes, Interfaces, Types | ✅ `import`/`export` | Full |
+| **Python** | ✅ Functions, Classes, Decorators | ✅ `import`/`from` | Full |
+| Go, Java, C/C++, Ruby, PHP, Swift, Kotlin | 📄 File tracking + line counts | ❌ | Planned |
+
+> **Note:** Languages without symbol extraction still get file tracking, dependency counting via file references, and git history analysis.
 
 ## Quick Start
 
 ### Build from source
 
 ```bash
-git clone <repo-url> && cd ctx
+git clone https://github.com/ahmetshbz1/ctx-agent.git && cd ctx-agent
 cargo build --release
 ```
-
-The binary will be at `./target/release/ctx`.
 
 ### Initialize a project
 
 ```bash
 cd your-project
-ctx init
+ctx-agent init
 ```
 
 This creates `.ctx/ctx.db` with all codebase intelligence.
@@ -82,37 +109,89 @@ This creates `.ctx/ctx.db` with all codebase intelligence.
 
 ```bash
 # Project overview
-ctx status
+ctx-agent status
 
 # Directory tree with symbols
-ctx map
+ctx-agent map
 
 # Search for symbols
-ctx query "parse"
+ctx-agent query "parse"
 
 # Impact analysis
-ctx blast-radius src/db/mod.rs
+ctx-agent blast-radius src/db/mod.rs
 
 # View decisions from git history
-ctx decisions
+ctx-agent decisions
 
 # Add a knowledge note
-ctx learn "Auth module uses JWT with RS256"
+ctx-agent learn "Auth module uses JWT with RS256"
 
 # Show warnings (fragile files, dead code)
-ctx warnings
+ctx-agent warnings
 
 # Live re-analysis on changes
-ctx watch
+ctx-agent watch
+
+# JSON output for agents
+ctx-agent status --json
+ctx-agent query "parse" --json
+```
+
+## Decision Tracking
+
+ctx-agent extracts architectural decisions from your git history using [conventional commits](https://www.conventionalcommits.org/):
+
+```
+$ ctx-agent decisions
+
+  📋 3 decisions
+
+  2026-02-10 [commit] feat(auth): switch to JWT RS256 (a3b8d1)
+  2026-02-10 [commit] fix: FTS5 contentless table — use regular FTS5 (37fea0b)
+  2026-02-10 [commit] feat: add TypeScript MCP server (55247d9)
+```
+
+Commits with `feat:`, `fix:`, `refactor:`, or `BREAKING CHANGE:` are auto-captured as decisions.
+
+**Best practice:** Use descriptive commit messages to build a decision log:
+
+```bash
+git commit -m "feat(auth): switch to jwt rs256
+
+- why: symmetric keys leaked in staging config
+- impact: auth service, api gateway, mobile client
+- alternative: rotate HMAC keys (rejected — same risk class)"
+```
+
+## Health Warnings
+
+ctx-agent detects three categories of codebase risk:
+
+| Warning | Formula | Example |
+|---------|---------|---------|
+| **Fragile File** | `churn_score > 5.0 AND dependents > 3` | A file changed 20+ times that 5 other files depend on |
+| **Large File** | `line_count > 500` | Any file over 500 lines — candidate for splitting |
+| **Dead Code** | `commit_count = 0 AND dependents = 0` | Files with no git history and nothing imports them |
+
+```
+$ ctx-agent warnings
+
+  ⚠ 2 warnings
+
+  🔥 Fragile files (high churn + many dependents):
+    · src/db/mod.rs — 12 changes, 8 dependents (churn: 7.2)
+
+  📏 Large files (>500 lines):
+    · src/analyzer/parser.rs — 618 lines (rust)
 ```
 
 ## CLI Reference
 
 ```
-Usage: ctx [OPTIONS] <COMMAND>
+Usage: ctx-agent [OPTIONS] <COMMAND>
 
 Commands:
-  init          Initialize ctx in the current project
+  init          Initialize ctx-agent in the current project
   scan          Scan/re-scan the project (incremental)
   map           Display codebase map with structure and stats
   status        Show project status dashboard
@@ -125,13 +204,14 @@ Commands:
 
 Options:
   -p, --project <PROJECT>  Project root directory (defaults to cwd)
+      --json               Output in JSON format (for agent consumption)
   -h, --help               Print help
   -V, --version            Print version
 ```
 
 ## MCP Server
 
-ctx includes a TypeScript MCP server that exposes all functionality to AI agents via the [Model Context Protocol](https://modelcontextprotocol.io/).
+ctx-agent includes a TypeScript MCP server that exposes all functionality to AI agents via the [Model Context Protocol](https://modelcontextprotocol.io/).
 
 ### Setup
 
@@ -150,7 +230,7 @@ Add to your MCP config (e.g. `mcp_config.json`):
   "mcpServers": {
     "ctx": {
       "command": "node",
-      "args": ["/path/to/ctx/mcp-server/dist/index.js"]
+      "args": ["/path/to/ctx-agent/mcp-server/dist/index.js"]
     }
   }
 }
@@ -160,7 +240,7 @@ Add to your MCP config (e.g. `mcp_config.json`):
 
 | Tool | Description |
 |------|-------------|
-| `ctx_init` | Initialize ctx in a project |
+| `ctx_init` | Initialize ctx-agent in a project |
 | `ctx_status` | Project dashboard |
 | `ctx_map` | Codebase structure map |
 | `ctx_scan` | Incremental re-scan |
@@ -170,32 +250,37 @@ Add to your MCP config (e.g. `mcp_config.json`):
 | `ctx_learn` | Store knowledge notes |
 | `ctx_warnings` | Codebase health warnings |
 
+> **Auto-init:** If a project hasn't been initialized, any MCP tool call will auto-run `ctx-agent init` first. No manual setup needed.
+
 ## Architecture
 
 ```
-ctx/
+ctx-agent/
 ├── src/
-│   ├── main.rs          # CLI (clap)
-│   ├── lib.rs           # Module exports
+│   ├── main.rs              # CLI (clap) + --json flag
+│   ├── lib.rs               # Module exports
 │   ├── db/
-│   │   ├── mod.rs       # SQLite + FTS5 operations
-│   │   ├── models.rs    # Data models
-│   │   └── schema.rs    # Schema migrations
+│   │   ├── mod.rs           # SQLite + FTS5 operations
+│   │   ├── models.rs        # Data models (TrackedFile, SymbolKind, etc.)
+│   │   └── schema.rs        # Schema migrations
 │   ├── analyzer/
-│   │   ├── mod.rs       # Orchestrator
-│   │   ├── scanner.rs   # File discovery
-│   │   ├── parser.rs    # tree-sitter extraction
-│   │   └── graph.rs     # Dependency graph
+│   │   ├── mod.rs           # Orchestrator
+│   │   ├── scanner.rs       # File discovery + .gitignore
+│   │   ├── parser/
+│   │   │   ├── mod.rs       # Parser dispatch
+│   │   │   ├── rust.rs      # Rust symbol + import extraction
+│   │   │   ├── typescript.rs # TS/JS extraction
+│   │   │   └── python.rs    # Python extraction
+│   │   └── graph.rs         # Dependency graph + blast radius
 │   ├── git/
-│   │   ├── mod.rs       # Git module
-│   │   └── history.rs   # Commit analysis
+│   │   └── history.rs       # Commit analysis + churn scoring
 │   ├── query/
-│   │   ├── search.rs    # FTS5 search
-│   │   └── blast.rs     # Blast radius
+│   │   ├── search.rs        # FTS5 search
+│   │   └── blast.rs         # Blast radius display
 │   └── watcher/
-│       └── mod.rs       # File watcher daemon
+│       └── mod.rs           # File watcher daemon
 └── mcp-server/
-    ├── src/index.ts     # TypeScript MCP server
+    ├── src/index.ts         # TypeScript MCP server (auto-init)
     ├── tsconfig.json
     └── package.json
 ```
@@ -211,11 +296,12 @@ ctx/
 
 ## Design Principles
 
-- **🔒 Local-first**: All data stays on your machine in a single `.ctx/ctx.db` file
-- **📡 Offline-capable**: No internet, no API keys, no cloud — works anywhere
-- **⚡ Incremental**: File hashes track changes — only re-analyzes what changed
-- **🪶 Zero runtime deps**: Single binary, no Docker, no services to run
-- **🤖 Agent-native**: Built for AI agents via MCP, not just humans
+- 🔒 **Local-first** — All data in a single `.ctx/ctx.db` file on your machine
+- 📡 **Offline-capable** — No internet, no API keys, no cloud
+- ⚡ **Incremental** — File hashes track changes — only re-analyzes what changed
+- 🪶 **Zero runtime deps** — Single binary, no Docker, no services
+- 🤖 **Agent-native** — Built for MCP, designed for AI agents
+- 📤 **Machine-readable** — `--json` flag for programmatic consumption
 
 ## License
 
